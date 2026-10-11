@@ -1,0 +1,31 @@
+/* 미리보기 A: 떠 있는 유리 캡슐 */
+:root {
+  --cm-capsule-gap: 12px;
+  --cm-playbar-space: 108px;
+}
+/* 사이드바·오른쪽 패널도 창 맨 아래까지 내려 캡슐이 그 위에 뜨게 한다 */
+.Root__nav-bar,
+.Root__right-sidebar {
+  grid-row-end: now-playing-bar;
+}
+.Root__nav-bar [data-overlayscrollbars-viewport],
+.Root__right-sidebar [data-overlayscrollbars-viewport] {
+  padding-bottom: var(--cm-playbar-space);
+}
+.Root__now-playing-bar.Root__now-playing-bar {
+  padding: 0 var(--cm-capsule-gap) var(--cm-capsule-gap);
+  box-sizing: border-box;
+  background: none;
+  border-top: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  pointer-events: none; /* 캡슐 둘레의 빈 곳은 아래 화면이 눌리게 */
+}
+.Root__now-playing-bar > .main-nowPlayingBar-container {
+  pointer-events: auto;
+  border-radius: 22px;
+  background-color: color-mix(in srgb, var(--cm-surface-player) 72%, transparent);
+  backdrop-filter: saturate(190%) blur(30px);
+  border: 1px solid rgba(var(--spice-rgb-ink), 0.13);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.46), 0 2px 8px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}

@@ -1,0 +1,23 @@
+/* 미리보기 D: 커버 색 반영 (색조가 있을 때만) */
+html.cm-tinted .Root__now-playing-bar {
+  --cm-play-color: color-mix(in srgb, var(--cm-tint) 62%, #fff);
+}
+html.cm-tinted .playback-progressbar .progress-bar {
+  --fg-color: var(--cm-play-color);
+  --is-active-fg-color: var(--cm-play-color);
+}
+html.cm-tinted .Root__now-playing-bar .volume-bar .progress-bar {
+  --is-active-fg-color: var(--cm-play-color);
+}
+html.cm-tinted .player-controls [data-testid="control-button-playpause"] > span {
+  --background-base: var(--cm-play-color);
+  --background-highlight: color-mix(in srgb, var(--cm-play-color), #fff 18%);
+  --background-press: color-mix(in srgb, var(--cm-play-color), #000 12%);
+  --text-base: #0b0b0c;
+  --essential-base: #0b0b0c;
+  color: #0b0b0c;
+}
+html.cm-tinted .player-controls [data-testid="control-button-playpause"] svg {
+  width: 16px;
+  height: 16px;
+}

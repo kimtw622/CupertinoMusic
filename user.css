@@ -1,0 +1,1807 @@
+/* ==========================================================================
+   CupertinoMusic - Spicetify theme
+   macOS Apple Music 을 연상시키는 차분한 데스크톱 음악 앱 스타일.
+
+   검증 기준: Spotify 1.2.96.518 (Windows) / Spicetify 2.45.3
+   구성:
+     01 토큰            08 홈 · 선반 · 카드        15 설정 화면
+     02 Encore 색 세트   09 앨범/플레이리스트 헤더   16 메뉴 · 툴팁 · 모달
+     03 타이포그래피     10 곡 목록                 17 버튼 · 칩 · 입력
+     04 앱 프레임        11 하단 재생바             18 스크롤바
+     05 상단 바          12 오른쪽 패널             19 포커스 · 모션
+     06 사이드바         13 검색                    20 사용자 스니펫 호환
+     07 메인 뷰 공통     14 가사                    21 변경에 취약한 선택자
+     22 재생 중인 커버의 색조 (theme.js 와 함께 동작)
+     23 유리 재생바
+
+   선택자 원칙
+   - Spicetify 가 매핑한 의미 있는 클래스(main-*, x-*, view-*, Root__*)와
+     data-testid / data-encore-id / aria-* 속성만 쓴다.
+   - Encore 디자인 시스템 클래스는 버전 접두사(e-10451-…)가 붙어 업데이트마다 바뀐다.
+     꼭 필요한 경우에만 [class*="…"] 부분 일치로 쓰고 21번 섹션에 모아 둔다.
+   ========================================================================== */
+
+/* ==========================================================================
+   01 토큰
+   색은 color.ini 가 내보내는 --spice-* 변수에서만 가져온다.
+   ========================================================================== */
+:root {
+  /* 글꼴: 설치된 시스템 글꼴만 사용 (번들·다운로드 없음) */
+  --cm-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard JP Variable",
+    "Pretendard JP", "Pretendard Variable", Pretendard, "Segoe UI Variable Text", "Segoe UI",
+    "Apple SD Gothic Neo", "Malgun Gothic", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+
+  /* 모서리 */
+  --cm-radius-xs: 4px;
+  --cm-radius-sm: 6px;
+  --cm-radius-md: 8px;
+  --cm-radius-lg: 10px;
+  --cm-radius-xl: 12px;
+  --cm-radius-pill: 999px;
+
+  /* 간격 */
+  --cm-space-1: 4px;
+  --cm-space-2: 8px;
+  --cm-space-3: 12px;
+  --cm-space-4: 16px;
+  --cm-space-5: 24px;
+
+  /* 선 · 채움 (ink 는 Light 에서 검정, Dark 에서 흰색) */
+  --cm-hairline: rgba(var(--spice-rgb-ink), 0.1);
+  --cm-hairline-strong: rgba(var(--spice-rgb-ink), 0.16);
+  --cm-fill-subtle: rgba(var(--spice-rgb-ink), 0.04);
+  --cm-fill-hover: rgba(var(--spice-rgb-ink), 0.055);
+  --cm-fill-press: rgba(var(--spice-rgb-ink), 0.1);
+  --cm-fill-selected: rgba(var(--spice-rgb-ink), 0.12);
+  --cm-fill-field: rgba(var(--spice-rgb-ink), 0.06);
+  --cm-fill-accent: rgba(var(--spice-rgb-button), 0.12);
+
+  /* 포인트 */
+  --cm-accent: var(--spice-button);
+  --cm-accent-text: var(--spice-accent-text);
+  --cm-accent-solid: var(--spice-accent-solid);
+  --cm-on-accent: var(--spice-on-accent);
+
+  /* 그림자 */
+  --cm-shadow-cover: 0 0 0 0.5px rgba(var(--spice-rgb-ink), 0.12),
+    0 2px 6px rgba(var(--spice-rgb-shadow), 0.06), 0 8px 20px rgba(var(--spice-rgb-shadow), 0.1);
+  --cm-shadow-pop: 0 0 0 0.5px var(--cm-hairline-strong),
+    0 4px 12px rgba(var(--spice-rgb-shadow), 0.08), 0 14px 36px rgba(var(--spice-rgb-shadow), 0.16);
+  --cm-ring-cover: 0 0 0 0.5px rgba(var(--spice-rgb-ink), 0.14);
+
+  /* 모션 */
+  --cm-dur-fast: 140ms;
+  --cm-dur-mid: 190ms;
+  --cm-dur-slow: 230ms;
+  --cm-dur-ambient: 420ms; /* 곡이 바뀔 때 표면 색조가 넘어가는 시간 */
+  --cm-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* 큰 표면 세 곳의 색. 기본은 스킴 색 그대로이고, 22번 섹션에서 커버 색조를 섞는다. */
+  --cm-surface-sidebar: var(--spice-sidebar);
+  --cm-surface-player: var(--spice-player);
+  --cm-surface-panel: var(--spice-main);
+  /* 스킴의 보조 글자색 원본. 24번이 --spice-subtext 를 밝힐 때 기준으로 쓴다(자기 참조를 피한다). */
+  --cm-subtext-base: var(--spice-subtext);
+
+  /* 프레임 치수 */
+  --cm-topbar-height: 52px;
+  --cm-capsule-gap: 12px; /* 재생바 캡슐과 창 가장자리·위쪽 내용 사이 */
+  --cm-capsule-radius: 22px;
+  --cm-playbar-row: 97px; /* 재생바 줄의 높이 = 캡슐 73 + 위아래 간격 12×2. 스크롤하지 않는 화면이 이 위에서 끝난다 */
+  --cm-playbar-space: 112px; /* 캡슐 아래로 들어간 내용이 스크롤 끝에서 비워 두는 높이(줄 높이 + 여유) */
+}
+
+/* ==========================================================================
+   02 Encore 색 세트
+   Spotify UI 는 대부분 이 변수로 칠해진다. Spicetify 기본 치환은 어두운 화면을
+   전제로 하므로(예: 흰 글자 = --spice-text) 밝은 스킴에서도 맞도록 다시 정의한다.
+   ========================================================================== */
+.encore-dark-theme,
+.encore-dark-theme .encore-base-set,
+.encore-light-theme,
+.encore-light-theme .encore-base-set {
+  --background-base: var(--spice-main);
+  --background-highlight: var(--spice-highlight);
+  --background-press: var(--spice-highlight-elevated);
+  --background-elevated-base: var(--spice-main-elevated);
+  --background-elevated-highlight: var(--spice-highlight-elevated);
+  --background-elevated-press: var(--spice-tab-active);
+  --background-tinted-base: rgba(var(--spice-rgb-ink), 0.06);
+  --background-tinted-highlight: rgba(var(--spice-rgb-ink), 0.09);
+  --background-tinted-press: rgba(var(--spice-rgb-ink), 0.13);
+  --text-base: var(--spice-text);
+  --text-subdued: var(--spice-subtext);
+  --text-bright-accent: var(--spice-accent-text);
+  --text-negative: var(--spice-negative);
+  --text-warning: var(--spice-warning);
+  --text-positive: var(--spice-positive);
+  --text-announcement: var(--spice-announcement);
+  --essential-base: var(--spice-text);
+  --essential-subdued: var(--spice-misc);
+  --essential-bright-accent: var(--spice-button);
+  --essential-negative: var(--spice-negative);
+  --essential-warning: var(--spice-warning);
+  --essential-positive: var(--spice-positive);
+  --essential-announcement: var(--spice-announcement);
+  --decorative-base: var(--spice-text);
+  --decorative-subdued: rgba(var(--spice-rgb-ink), 0.12);
+}
+
+/* 포인트색으로 채운 버튼 (재생 버튼 등) */
+.encore-dark-theme .encore-bright-accent-set,
+.encore-light-theme .encore-bright-accent-set {
+  --background-base: var(--spice-button);
+  --background-highlight: color-mix(in srgb, var(--spice-button), #000 7%);
+  --background-press: color-mix(in srgb, var(--spice-button), #000 15%);
+  --background-elevated-base: var(--spice-button);
+  --background-elevated-highlight: color-mix(in srgb, var(--spice-button), #000 7%);
+  --background-elevated-press: color-mix(in srgb, var(--spice-button), #000 15%);
+  --background-tinted-base: var(--spice-button);
+  --background-tinted-highlight: var(--spice-button);
+  --background-tinted-press: var(--spice-button);
+  --text-base: var(--spice-on-accent);
+  --text-subdued: var(--spice-on-accent);
+  --text-bright-accent: var(--spice-on-accent);
+  --text-negative: var(--spice-on-accent);
+  --text-warning: var(--spice-on-accent);
+  --text-positive: var(--spice-on-accent);
+  --text-announcement: var(--spice-on-accent);
+  --essential-base: var(--spice-on-accent);
+  --essential-subdued: var(--spice-on-accent);
+  --essential-bright-accent: var(--spice-on-accent);
+  --essential-negative: var(--spice-on-accent);
+  --essential-warning: var(--spice-on-accent);
+  --essential-positive: var(--spice-on-accent);
+  --essential-announcement: var(--spice-on-accent);
+  --decorative-base: var(--spice-on-accent);
+  --decorative-subdued: color-mix(in srgb, var(--spice-button), #000 15%);
+}
+
+/* 반전 세트: 본문 글자색으로 채우고 배경색 글자를 올린다 (Light: 진한 회색 알약, Dark: 밝은 알약) */
+.encore-dark-theme .encore-inverted-light-set,
+.encore-dark-theme .encore-inverted-set,
+.encore-light-theme .encore-inverted-light-set,
+.encore-light-theme .encore-inverted-set {
+  --background-base: var(--spice-text);
+  --background-highlight: color-mix(in srgb, var(--spice-text), var(--spice-main) 14%);
+  --background-press: color-mix(in srgb, var(--spice-text), var(--spice-main) 24%);
+  --background-elevated-base: var(--spice-text);
+  --background-elevated-highlight: color-mix(in srgb, var(--spice-text), var(--spice-main) 14%);
+  --background-elevated-press: color-mix(in srgb, var(--spice-text), var(--spice-main) 24%);
+  --background-tinted-base: var(--spice-text);
+  --background-tinted-highlight: var(--spice-text);
+  --background-tinted-press: var(--spice-text);
+  --text-base: var(--spice-main);
+  --text-subdued: color-mix(in srgb, var(--spice-main), var(--spice-text) 30%);
+  --text-bright-accent: var(--spice-main);
+  --essential-base: var(--spice-main);
+  --essential-subdued: color-mix(in srgb, var(--spice-main), var(--spice-text) 40%);
+  --essential-bright-accent: var(--spice-main);
+  --decorative-base: var(--spice-main);
+  --decorative-subdued: color-mix(in srgb, var(--spice-text), var(--spice-main) 20%);
+}
+
+/* 보조 표면 세트: 기본값에 #141414 같은 어두운 고정색이 박혀 있어 밝은 스킴에서 깨진다 */
+.encore-dark-theme .encore-inverted-dark-set,
+.encore-dark-theme .encore-muted-accent-set,
+.encore-dark-theme .encore-app-frame-set,
+.encore-light-theme .encore-inverted-dark-set,
+.encore-light-theme .encore-muted-accent-set,
+.encore-light-theme .encore-app-frame-set {
+  --background-base: var(--spice-sidebar);
+  --background-highlight: color-mix(in srgb, var(--spice-sidebar), var(--spice-text) 6%);
+  --background-press: color-mix(in srgb, var(--spice-sidebar), var(--spice-text) 11%);
+  --background-elevated-base: color-mix(in srgb, var(--spice-sidebar), var(--spice-text) 4%);
+  --background-elevated-highlight: color-mix(in srgb, var(--spice-sidebar), var(--spice-text) 8%);
+  --background-elevated-press: color-mix(in srgb, var(--spice-sidebar), var(--spice-text) 12%);
+  --background-tinted-base: rgba(var(--spice-rgb-ink), 0.06);
+  --background-tinted-highlight: rgba(var(--spice-rgb-ink), 0.09);
+  --background-tinted-press: rgba(var(--spice-rgb-ink), 0.13);
+  --text-base: var(--spice-text);
+  --text-subdued: var(--spice-subtext);
+  --text-bright-accent: var(--spice-accent-text);
+  --essential-base: var(--spice-text);
+  --essential-subdued: var(--spice-misc);
+  --essential-bright-accent: var(--spice-button);
+  --decorative-base: var(--spice-text);
+  --decorative-subdued: rgba(var(--spice-rgb-ink), 0.12);
+}
+
+/* 이미지·영상 위: 스킴과 무관하게 항상 흰 글자 */
+.encore-dark-theme .encore-over-media-set,
+.encore-light-theme .encore-over-media-set {
+  --text-base: #fff;
+  --text-subdued: #fff;
+  --text-bright-accent: #fff;
+  --text-negative: #fff;
+  --text-warning: #fff;
+  --text-positive: #fff;
+  --text-announcement: #fff;
+  --essential-base: #fff;
+  --essential-subdued: #fff;
+  --essential-bright-accent: #fff;
+  --essential-negative: #fff;
+  --essential-warning: #fff;
+  --essential-positive: #fff;
+  --essential-announcement: #fff;
+  --decorative-base: #fff;
+  --decorative-subdued: rgba(255, 255, 255, 0.13);
+}
+
+/* 의미 색상 - 채운 배너: 포인트색과 섞이지 않게 고정 */
+.encore-dark-theme .encore-negative-set,
+.encore-light-theme .encore-negative-set,
+.encore-dark-theme .encore-announcement-set,
+.encore-light-theme .encore-announcement-set {
+  --text-base: #fff;
+  --text-subdued: #fff;
+  --text-bright-accent: #fff;
+  --essential-base: #fff;
+  --essential-subdued: #fff;
+  --essential-bright-accent: #fff;
+  --decorative-base: #fff;
+}
+.encore-dark-theme .encore-warning-set,
+.encore-light-theme .encore-warning-set,
+.encore-dark-theme .encore-positive-set,
+.encore-light-theme .encore-positive-set {
+  --text-base: #1d1d1f;
+  --text-subdued: #1d1d1f;
+  --text-bright-accent: #1d1d1f;
+  --essential-base: #1d1d1f;
+  --essential-subdued: #1d1d1f;
+  --essential-bright-accent: #1d1d1f;
+  --decorative-base: #1d1d1f;
+}
+.encore-dark-theme .encore-positive-set,
+.encore-light-theme .encore-positive-set {
+  --background-base: var(--spice-toggle-on);
+  --background-highlight: color-mix(in srgb, var(--spice-toggle-on), #fff 12%);
+  --background-press: color-mix(in srgb, var(--spice-toggle-on), #000 10%);
+  --background-elevated-base: var(--spice-toggle-on);
+  --background-elevated-highlight: color-mix(in srgb, var(--spice-toggle-on), #fff 12%);
+  --background-elevated-press: color-mix(in srgb, var(--spice-toggle-on), #000 10%);
+  --background-tinted-base: var(--spice-toggle-on);
+  --background-tinted-highlight: var(--spice-toggle-on);
+  --background-tinted-press: var(--spice-toggle-on);
+  --decorative-subdued: color-mix(in srgb, var(--spice-toggle-on), #000 12%);
+}
+
+/* 의미 색상 - 옅은 배너: 해당 색을 배경에 조금 섞고 글자는 의미 색 그대로 */
+.encore-dark-theme .encore-negative-subdued-set,
+.encore-light-theme .encore-negative-subdued-set {
+  --cm-tone: var(--spice-negative);
+}
+.encore-dark-theme .encore-warning-subdued-set,
+.encore-light-theme .encore-warning-subdued-set {
+  --cm-tone: var(--spice-warning);
+}
+.encore-dark-theme .encore-positive-subdued-set,
+.encore-light-theme .encore-positive-subdued-set {
+  --cm-tone: var(--spice-positive);
+}
+.encore-dark-theme .encore-announcement-subdued-set,
+.encore-light-theme .encore-announcement-subdued-set {
+  --cm-tone: var(--spice-announcement);
+}
+.encore-dark-theme :is(.encore-negative-subdued-set, .encore-warning-subdued-set, .encore-positive-subdued-set, .encore-announcement-subdued-set),
+.encore-light-theme :is(.encore-negative-subdued-set, .encore-warning-subdued-set, .encore-positive-subdued-set, .encore-announcement-subdued-set) {
+  --background-base: color-mix(in srgb, var(--cm-tone) 13%, var(--spice-main));
+  --background-highlight: color-mix(in srgb, var(--cm-tone) 18%, var(--spice-main));
+  --background-press: color-mix(in srgb, var(--cm-tone) 24%, var(--spice-main));
+  --background-elevated-base: color-mix(in srgb, var(--cm-tone) 18%, var(--spice-main));
+  --background-elevated-highlight: color-mix(in srgb, var(--cm-tone) 18%, var(--spice-main));
+  --background-elevated-press: color-mix(in srgb, var(--cm-tone) 24%, var(--spice-main));
+  --background-tinted-base: color-mix(in srgb, var(--cm-tone) 13%, var(--spice-main));
+  --background-tinted-highlight: color-mix(in srgb, var(--cm-tone) 13%, var(--spice-main));
+  --background-tinted-press: color-mix(in srgb, var(--cm-tone) 13%, var(--spice-main));
+  --text-base: var(--cm-tone);
+  --text-subdued: var(--cm-tone);
+  --text-bright-accent: var(--cm-tone);
+  --text-negative: var(--cm-tone);
+  --text-warning: var(--cm-tone);
+  --text-positive: var(--cm-tone);
+  --text-announcement: var(--cm-tone);
+  --essential-base: var(--cm-tone);
+  --essential-subdued: var(--cm-tone);
+  --essential-bright-accent: var(--cm-tone);
+  --essential-negative: var(--cm-tone);
+  --essential-warning: var(--cm-tone);
+  --essential-positive: var(--cm-tone);
+  --essential-announcement: var(--cm-tone);
+  --decorative-base: var(--cm-tone);
+  --decorative-subdued: color-mix(in srgb, var(--cm-tone) 28%, var(--spice-main));
+}
+
+/* ==========================================================================
+   03 타이포그래피
+   Encore 글자 크기 변수만 다시 잡아 전체 위계를 한 번에 조정한다.
+     페이지 제목 28~32px · 섹션 제목 20~22px · 본문/목록 13~14px · 보조 12px
+   ========================================================================== */
+:root,
+body {
+  --encore-body-font-stack: var(--cm-font);
+  --encore-title-font-stack: var(--cm-font);
+  --encore-variable-font-stack: var(--cm-font);
+  --fallback-fonts: var(--cm-font);
+}
+
+body {
+  font-family: var(--cm-font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:root,
+.encore-layout-themes,
+.encore-small-devices-theme,
+.encore-medium-devices-theme {
+  --encore-text-size-smaller-3: 0.625rem; /* 10px */
+  --encore-text-size-smaller-2: 0.75rem; /* 12px - 보조 정보 */
+  --encore-text-size-smaller: 0.8125rem; /* 13px - 기본 UI */
+  --encore-text-size-base: 0.875rem; /* 14px - 목록 제목 */
+  --encore-text-size-large: 1rem; /* 16px */
+  --encore-text-size-larger: 1.25rem; /* 20px - 섹션 제목 */
+  --encore-text-size-larger-2: 1.375rem; /* 22px */
+  --encore-text-size-larger-3: 1.75rem; /* 28px - 페이지 제목 */
+  --encore-text-size-larger-4: 1.875rem; /* 30px */
+  --encore-text-size-larger-5: 2rem; /* 32px - 앨범/플레이리스트 제목 */
+}
+
+/* 굵기: 큰 제목만 bold, 강조 본문은 semibold. 나머지는 Spotify 기본(400)을 유지한다. */
+.encore-text-headline-large,
+.encore-text-headline-medium,
+.encore-text-title-large {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.encore-text-title-medium,
+.encore-text-title-small,
+.encore-text-title-extra-small {
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+.encore-text-body-medium-bold,
+.encore-text-body-small-bold,
+.encore-text-marginal-bold,
+.encore-text-marginal-small-bold {
+  font-weight: 600;
+}
+
+/* 여러 줄로 내려가는 제목은 한글 어절 단위로 줄바꿈 (한 줄 말줄임 영역은 건드리지 않는다) */
+.main-entityHeader-title,
+.main-shelf-title,
+.main-card-cardTitle,
+.view-homeShortcutsGrid-name {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================================================
+   04 앱 프레임
+   패널 사이 간격과 둥근 패널을 없애고 얇은 구분선으로만 나눈다.
+   사이드바는 창 맨 위까지 올리고, 상단 바는 콘텐츠 영역 위에만 둔다.
+   ========================================================================== */
+.Root__top-container {
+  --panel-gap: 0px;
+  background-color: var(--spice-main);
+}
+
+.Root__nav-bar {
+  grid-row-start: top-banner;
+  background-color: var(--cm-surface-sidebar);
+  transition: background-color var(--cm-dur-ambient) var(--cm-ease);
+  border-radius: 0;
+  border-inline-end: 1px solid var(--cm-hairline);
+}
+
+/* 창 위쪽 60px 는 창 이동용 드래그 영역이다. 그 아래로 올라간 사이드바 조작부는 클릭 가능해야 한다. */
+.Root__nav-bar :is(.main-yourLibraryX-header, .main-yourLibraryX-filterArea) :is(button, a, input, [role="button"], [role="option"]) {
+  -webkit-app-region: no-drag;
+}
+
+.Root__main-view {
+  background-color: var(--spice-main);
+  border-radius: 0;
+}
+
+.Root__right-sidebar {
+  background-color: var(--cm-surface-panel);
+  border-radius: 0;
+  transition: background-color var(--cm-dur-ambient) var(--cm-ease);
+}
+.Root__right-sidebar .Root__right-sidebar-expanded {
+  border-inline-start: 1px solid var(--cm-hairline);
+}
+
+.Root__now-playing-bar {
+  background-color: var(--cm-surface-player);
+  border-top: 1px solid var(--cm-hairline);
+  transition: background-color var(--cm-dur-ambient) var(--cm-ease);
+}
+
+/* 패널 크기 조절 손잡이: Spotify 는 손잡이 폭과 위치를 --panel-gap 으로 잡는다.
+   간격을 0 으로 만들었으므로 잡을 수 있는 폭(9px)을 직접 주고 경계선 위에 걸쳐 놓는다. */
+.LayoutResizer__resize-bar {
+  --essential-subdued: var(--cm-hairline-strong);
+  width: 9px;
+}
+.LayoutResizer__inline-end {
+  inset-inline-end: -5px;
+}
+.LayoutResizer__inline-start {
+  inset-inline-start: -5px;
+}
+
+/* ==========================================================================
+   05 상단 바
+   ========================================================================== */
+#global-nav-bar.Root__globalNav {
+  grid-column-start: 2;
+  height: var(--cm-topbar-height);
+  margin: 0;
+  padding: 0 var(--cm-space-3) 0 var(--cm-space-2);
+  /* 사이드바와 같은 표면을 쓴다. 창의 왼쪽·위쪽 테두리가 한 덩어리로 읽히고, 커버 색조(22번)도 함께 따라간다. */
+  background-color: var(--cm-surface-sidebar);
+  box-shadow: inset 0 -1px 0 var(--cm-hairline);
+  transition: background-color var(--cm-dur-ambient) var(--cm-ease);
+}
+
+/* 창 버튼(최소화·최대화·닫기) 자리
+   Windows 에서는 Spotify 가 창 오른쪽 위에 버튼을 직접 그리면서 그 자리(135×64px, 폭은 확대/축소 배율에
+   반비례)를 반투명 검정으로 덮는다. 그대로 두면 상단 바 끝에 어두운 상자가 뜬다.
+   같은 자리의 화면을 미리 그만큼 밝혀 두어(2.12 ≈ 1 ÷ 0.47) 덮인 뒤에 주변과 같은 색이 되게 한다.
+   Spotify 가 덮는 방식을 바꾸면 이 자리가 반대로 밝게 뜬다. 그때는 이 블록을 지운다.
+   높이: Spotify 기본은 64px. theme.js 가 창 버튼 자리를 상단 바 높이(52px)로 맞추면 --cm-titlebar-height 로
+   그 값을 넘기고, 덮이는 자리도 같이 줄어들므로 여기서도 그 높이를 쓴다. */
+@supports (backdrop-filter: brightness(1)) {
+  .spotify__container--is-desktop.spotify__os--is-windows:not(.fullscreen) .Root::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 99; /* 상단 바(7)보다 위에서 칠해져야 상단 바가 밝혀진다 */
+    width: calc(135px / (var(--zoom-level, 100) / 100));
+    height: var(--cm-titlebar-height, 64px);
+    backdrop-filter: brightness(2.12);
+    pointer-events: none;
+  }
+}
+
+/* 홈 · 사용자 정의 앱 링크: 원형 배경을 걷어내고 hover 때만 채운다 */
+.Root__globalNav .main-globalNav-navLink {
+  background-color: transparent;
+  border-radius: var(--cm-radius-md);
+  transition: background-color var(--cm-dur-fast) var(--cm-ease), color var(--cm-dur-fast) var(--cm-ease);
+}
+.Root__globalNav .main-globalNav-navLink:hover {
+  background-color: var(--cm-fill-hover);
+}
+.Root__globalNav .main-globalNav-navLink:active {
+  background-color: var(--cm-fill-press);
+}
+.Root__globalNav .main-globalNav-navLinkActive {
+  color: var(--cm-accent-text);
+}
+
+/* 검색 필드 */
+.main-globalNav-searchInputContainer {
+  --encore-control-size-base: 36px; /* 입력창 높이 (Spotify 기본 48px) */
+  --encore-corner-radius-base: var(--cm-radius-lg);
+}
+/* 48px 자리 안에서 36px 입력창을 세로 가운데로 */
+.main-globalNav-searchInputSection {
+  display: flex;
+  align-items: center;
+}
+.main-globalNav-searchInputSection > .main-globalNav-searchInputContainer {
+  flex: 1 1 auto;
+}
+.main-globalNav-searchInputContainer .main-topBar-searchBar {
+  block-size: 36px;
+  padding-block: 0;
+  background-color: var(--cm-fill-field);
+  box-shadow: none;
+  font-size: 0.8125rem;
+  transition: background-color var(--cm-dur-fast) var(--cm-ease), box-shadow var(--cm-dur-fast) var(--cm-ease);
+}
+.main-globalNav-searchInputContainer .main-topBar-searchBar:hover {
+  background-color: rgba(var(--spice-rgb-ink), 0.08);
+  box-shadow: none;
+}
+.main-globalNav-searchInputContainer .main-topBar-searchBar:focus {
+  background-color: var(--spice-main);
+  box-shadow: 0 0 0 1px var(--cm-hairline-strong), 0 0 0 4px rgba(var(--spice-rgb-button), 0.22);
+}
+.main-globalNav-searchInputContainer .main-topBar-searchBar::placeholder {
+  color: var(--spice-subtext);
+}
+.main-globalNav-searchInputText {
+  font-size: 0.8125rem;
+  color: var(--spice-subtext);
+}
+
+/* 프로필 버튼 */
+.main-userWidget-box {
+  background-color: transparent;
+}
+.main-userWidget-box .main-avatar-image {
+  box-shadow: var(--cm-ring-cover);
+}
+
+/* ==========================================================================
+   06 사이드바 (내 라이브러리)
+   ========================================================================== */
+.Root__nav-bar .main-yourLibraryX-entryPoints,
+.Root__nav-bar .main-yourLibraryX-libraryContainer {
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.main-yourLibraryX-header {
+  box-shadow: none;
+}
+
+/* "내 라이브러리" 머리글: 사이드바 섹션 제목처럼 작고 조용하게 */
+.main-yourLibraryX-collapseButton h1 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* 목록 행: 행 높이는 그대로(가상 스크롤이 높이에 의존), 모서리와 상태색만 조정 */
+.main-yourLibraryX-listItem [data-encore-id="listRow"] {
+  border-radius: var(--cm-radius-md);
+}
+.main-yourLibraryX-listItem[aria-selected="true"] [data-encore-id="listRow"] {
+  background-color: var(--cm-fill-selected);
+}
+.main-yourLibraryX-listItem [data-encore-id="listRowTitle"] {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.main-yourLibraryX-listItem [data-encore-id="listRowSubtitle"] {
+  font-size: 0.75rem;
+}
+
+/* 라이브러리 안 필터 · 정렬 */
+.main-yourLibraryX-libraryFilter .x-filterBox-filterInput {
+  border-radius: var(--cm-radius-md);
+  background-color: var(--cm-fill-field);
+}
+
+/* ==========================================================================
+   07 메인 뷰 공통
+   ========================================================================== */
+/* 스크롤하면 나타나는 페이지 상단 바: 커버 추출색 대신 반투명 배경 + 구분선 */
+.main-topBar-container .main-topBar-background {
+  background-color: var(--spice-main) !important; /* 인라인으로 들어오는 추출색을 덮는다 */
+  border-radius: 0;
+  box-shadow: 0 1px 0 var(--cm-hairline);
+}
+.main-topBar-container .main-topBar-overlay {
+  background-color: transparent;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .main-topBar-container .main-topBar-background {
+    background-color: rgba(var(--spice-rgb-main), 0.82) !important;
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+}
+
+.main-entityHeader-topbarTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   08 홈 · 선반 · 카드
+   ========================================================================== */
+/* 홈 상단의 색 그라데이션 제거 */
+.main-home-homeHeader {
+  background-color: transparent !important; /* 인라인 추출색 */
+  background-image: none;
+}
+
+/* 큰 페이지 제목
+   Spotify 의 <h1>홈</h1> 은 화면에서 숨겨져 있고(@layer 안의 !important 라 되살릴 수 없다)
+   그 자리에 같은 글자를 그린다. 뒤의 "" 는 화면 낭독기가 제목을 두 번 읽지 않게 한다.
+   한국어가 아니면 "Home" 으로 나온다. */
+.main-view-container__scroll-node-child main > div:has(> [data-testid="home-page"])::before {
+  content: "Home" / "";
+  display: block;
+  padding: var(--cm-space-5) 40px 0; /* 좌우 40px = 홈 본문(.main-home-content)의 여백 */
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  color: var(--spice-text);
+}
+:lang(ko) .main-view-container__scroll-node-child main > div:has(> [data-testid="home-page"])::before {
+  content: "홈" / "";
+}
+
+/* 스크롤하면 위에 붙는 필터 줄: 추출색 + 검정 덮개 대신 페이지 상단 바(07번)와 같은 면 */
+.main-home-filterChipsContainer .main-home-filterChipsSection {
+  background-color: var(--spice-main);
+  box-shadow: 0 1px 0 var(--cm-hairline);
+}
+.main-home-filterChipsContainer .main-home-filterChipsSection.main-home-filterChipsSection::after {
+  content: none;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .main-home-filterChipsContainer .main-home-filterChipsSection {
+    background-color: rgba(var(--spice-rgb-main), 0.82);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+}
+
+/* 홈 맨 위 프로모션 카드: 반투명 검정 덮개 대신 옅은 회색 면 */
+[data-testid="home-ad-card"] > div {
+  background-color: var(--cm-fill-subtle);
+  border-radius: var(--cm-radius-xl);
+}
+
+/* 가로 스크롤 선반의 양끝 페이드: 고정된 어두운 색(#121212) 대신 배경색으로 */
+.search-searchCategory-contentArea {
+  --carousel-start-chevron-gradient: var(--spice-main);
+  --carousel-end-chevron-gradient: var(--spice-main);
+}
+
+/* 바로가기 타일: 상자를 걷어내고 커버 + 이름만. hover 때만 옅게 채운다 */
+.view-homeShortcutsGrid-shortcut {
+  background-color: transparent;
+  border-radius: var(--cm-radius-md);
+  transition: background-color var(--cm-dur-fast) var(--cm-ease);
+}
+.view-homeShortcutsGrid-shortcut:hover,
+.view-homeShortcutsGrid-shortcut:focus-within,
+.view-homeShortcutsGrid-shortcut[data-context-menu-open="true"] {
+  background-color: var(--cm-fill-hover);
+}
+.view-homeShortcutsGrid-shortcut .view-homeShortcutsGrid-imageWrapper {
+  background-color: var(--cm-fill-subtle);
+  border-radius: var(--cm-radius-sm);
+  box-shadow: var(--cm-ring-cover);
+  overflow: hidden;
+}
+.view-homeShortcutsGrid-name {
+  font-weight: 500;
+}
+
+/* 선반 제목: 링크인 제목 뒤에 꺾쇠를 붙인다. 오른쪽의 "모두 표시" 는 같은 곳으로 가므로 숨긴다(21번) */
+.main-shelf-title {
+  letter-spacing: -0.012em;
+}
+.main-shelf-title a[href]::after {
+  content: "";
+  display: inline-block;
+  inline-size: 0.42em;
+  block-size: 0.42em;
+  margin-inline-start: 0.38em;
+  border-block-start: 2px solid var(--spice-subtext);
+  border-inline-end: 2px solid var(--spice-subtext);
+  transform: translateY(-0.12em) rotate(45deg);
+  transition: border-color var(--cm-dur-fast) var(--cm-ease);
+}
+.main-shelf-title a[href]:hover {
+  text-decoration: none;
+}
+.main-shelf-title a[href]:hover::after {
+  border-color: var(--spice-text);
+}
+
+/* 카드: 배경 상자 없이 커버가 먼저 보이게. hover 때는 상자 대신 커버만 살짝 어두워진다 */
+.main-card-cardContainer {
+  --card-color: transparent;
+  background-color: transparent;
+  border-radius: var(--cm-radius-lg);
+}
+.main-card-cardContainer:hover,
+.main-card-cardContainer:focus-within {
+  background-color: transparent;
+}
+.main-card-imageContainer .main-cardImage-imageWrapper {
+  background-color: var(--cm-fill-subtle);
+  border-radius: var(--cm-radius-md);
+  box-shadow: var(--cm-ring-cover);
+  transition: filter var(--cm-dur-mid) var(--cm-ease);
+}
+.main-card-cardContainer:is(:hover, :focus-within) .main-cardImage-imageWrapper {
+  filter: brightness(0.82);
+}
+.main-card-imageContainer .main-cardImage-image {
+  border-radius: var(--cm-radius-md);
+}
+.main-card-imageContainer .main-cardImage-circular,
+.main-card-imageContainer .main-cardImage-imageWrapper:has(> div > .main-cardImage-circular) {
+  border-radius: 50%;
+}
+/* 제목은 보조 정보(13px)보다 한 단계 크게, 굵기는 보통 */
+.main-card-cardTitle {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+.main-card-cardMetadata,
+.main-card-cardMetadataWrapper {
+  font-size: 0.8125rem;
+}
+/* 아티스트(원형) 카드는 이름과 보조 글자를 가운데로 (제목 링크를 직접 담은 세로 묶음을 가운데 정렬) */
+.main-card-cardContainer:has(.main-cardImage-circular) :has(> .main-card-cardTitleLink) {
+  align-items: center;
+  text-align: center;
+}
+
+/* 커버 위 재생 버튼: 반투명 어두운 원 + 흰 아이콘, 버튼에 직접 올리면 포인트색 */
+.main-card-PlayButtonContainer {
+  transition: opacity var(--cm-dur-mid) var(--cm-ease), transform var(--cm-dur-mid) var(--cm-ease);
+}
+.main-card-PlayButtonContainer .encore-bright-accent-set {
+  --background-base: rgba(var(--spice-rgb-over-media), 0.72);
+  --background-highlight: var(--spice-button);
+  --background-press: color-mix(in srgb, var(--spice-button), #000 15%);
+  box-shadow: none;
+  transition: background-color var(--cm-dur-fast) var(--cm-ease);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .main-card-PlayButtonContainer .encore-bright-accent-set {
+    --background-base: rgba(var(--spice-rgb-over-media), 0.56);
+    backdrop-filter: saturate(160%) blur(14px);
+  }
+}
+.main-card-PlayButtonContainer .main-playButton-PlayButton button {
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   09 앨범 · 플레이리스트 헤더
+   ========================================================================== */
+/* 커버 추출색 배경은 남기되 옅은 기운만. 커버 이미지 자체는 손대지 않는다 */
+.main-entityHeader-container .main-entityHeader-backgroundColor {
+  opacity: 0.18;
+  -webkit-mask-image: linear-gradient(to bottom, #000 25%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 25%, transparent 100%);
+}
+.main-entityHeader-container .main-entityHeader-overlay {
+  background: none;
+}
+.main-actionBarBackground-background,
+.playlist-playlist-actionBarBackground-background {
+  background-image: none !important; /* 인라인 그라데이션 */
+  background-color: transparent !important;
+}
+
+/* 제목을 32px 로 묶어 둔 만큼 헤더도 그 비율에 맞춘다.
+   - 높이는 화면 비율(30vh)이 아니라 내용(커버·글자)에 맞춘다: 큰 창에서 커버 위가 비지 않는다.
+   - 커버는 Spotify 의 좁은 폭 기본값(192px)을 넓은 창에서도 쓴다.
+   - 재생 버튼 줄의 위아래 여백은 Spotify 가 열어 둔 변수로 줄인다. 곡 목록 행 높이는 그대로다. */
+.main-entityHeader-container.main-entityHeader-containerNormal:not(.main-entityHeader-withBackgroundImage) {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  padding-top: var(--content-spacing);
+}
+.main-entityHeader-containerNormal:not(.main-entityHeader-withBackgroundImage) .main-entityHeader-imageContainer {
+  width: 192px;
+  height: 192px;
+}
+.main-actionBar-ActionBar {
+  --action-bar-padding-top: 16px;
+  --action-bar-padding-bottom: 16px;
+}
+
+.main-entityHeader-imageContainer .main-entityHeader-image {
+  border-radius: var(--cm-radius-lg);
+}
+.main-entityHeader-imageContainer img.main-entityHeader-image,
+.main-entityHeader-imageContainer .main-entityHeader-shadow {
+  box-shadow: var(--cm-shadow-cover);
+}
+
+.main-entityHeader-pretitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--spice-subtext);
+}
+
+/* 제목: 26~32px, 길면 세 줄까지 줄바꿈 */
+.main-entityHeader-title h1 {
+  font-size: 2rem !important; /* Spotify 가 폭에 맞춰 인라인 크기를 넣는다 */
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  padding-block: 2px;
+}
+
+.main-entityHeader-metaData,
+.main-entityHeader-metaDataText {
+  font-size: 0.8125rem;
+}
+/* 헤더의 보조 글자는 기본값이 흰색 70% 고정이다. 색 배경 헤더에서는 테마의 보조 글자색을 쓴다
+   (사진 배경 헤더는 아래에서 흰색 유지) */
+.main-entityHeader-container:not(.main-entityHeader-withBackgroundImage) :is(.main-entityHeader-metaData, .playlist-playlist-playlistDescription) {
+  --text-subdued: var(--spice-subtext) !important; /* Spotify 가 인라인으로 흰색 70% 를 넣는다 */
+  color: var(--spice-subtext);
+}
+.main-entityHeader-metaData [data-testid="creator-link"] {
+  color: var(--cm-accent-text);
+  font-weight: 600;
+}
+
+/* 이미지 배경을 쓰는 헤더(아티스트): 사진 위 글자는 항상 흰색 */
+.main-entityHeader-withBackgroundImage .main-entityHeader-headerText {
+  --text-base: #fff;
+  --text-subdued: rgba(255, 255, 255, 0.86);
+  color: #fff;
+}
+.main-entityHeader-withBackgroundImage .main-entityHeader-title h1,
+.main-entityHeader-withBackgroundImage .main-entityHeader-pretitle {
+  color: #fff;
+}
+/* 아티스트 이름: 큰 사진 위에서는 32px 가 작아 보여 한 단계 키운다 */
+.main-entityHeader-withBackgroundImage [data-encore-id="adaptiveTitle"] {
+  font-size: 3rem !important; /* Spotify 가 칸에 맞춰 인라인으로 크기와 글자 폭(font-stretch)을 줄인다 */
+  font-stretch: normal !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.03em;
+}
+
+/* 재생 버튼 줄 (플레이리스트 · 앨범 · 아티스트)
+   둥근 재생 버튼과 셔플 아이콘을 글자가 붙은 버튼 한 쌍으로 바꾸고 맨 앞에 나란히 둔다.
+   - DOM 은 그대로다. 순서는 flex order 로만 바꾼다(Tab 순서는 원래대로).
+   - 글자는 aria-label 로 고른다(한국어·영어). 다른 언어에서는 재생 버튼은 아이콘만 든 긴 버튼,
+     셔플은 원래 아이콘 버튼으로 남는다.
+   - 스크롤하면 위에 붙는 바의 둥근 재생 버튼은 건드리지 않는다. */
+.main-actionBar-ActionBarRow {
+  --encore-graphic-size-decorative-larger: 24px; /* 보조 아이콘 32 → 24px */
+}
+.main-actionBar-ActionBarRow > button {
+  margin-inline-end: var(--cm-space-4);
+}
+
+/* 재생 */
+.main-actionBar-ActionBarRow > .main-playButton-PlayButton,
+.main-actionBar-ActionBarRow > .main-actionBar-ActionBarPlayButtonContainer {
+  order: -2;
+  inline-size: auto;
+  block-size: auto;
+  aspect-ratio: auto;
+  margin: 0 var(--cm-space-2) 0 0;
+}
+.main-actionBar-ActionBarPlayButtonContainer > div:not(.main-topBar-playButtonWrapper) {
+  display: none; /* 믹스/프롬프트 플레이리스트에서 둥근 버튼을 감싸던 장식 링 */
+}
+.main-actionBar-ActionBarRow :is(.main-topBar-playButtonWrapper, .main-playButton-PlayButton) {
+  inline-size: auto;
+  block-size: auto;
+}
+.main-actionBar-ActionBarRow .main-playButton-PlayButton > button {
+  --encore-graphic-size-decorative-base: 14px;
+  inline-size: auto;
+  block-size: auto;
+  border-radius: var(--cm-radius-lg);
+  transform: none;
+}
+.main-actionBar-ActionBarRow .main-playButton-PlayButton > button > span {
+  --background-base: var(--cm-accent-solid); /* 흰 글자가 올라가므로 채움용 포인트색 */
+  --background-highlight: color-mix(in srgb, var(--cm-accent-solid), #fff 8%);
+  --background-press: color-mix(in srgb, var(--cm-accent-solid), #000 12%);
+  inline-size: auto;
+  min-inline-size: 132px;
+  block-size: 36px;
+  padding-inline: var(--cm-space-4);
+  gap: 7px;
+  border-radius: var(--cm-radius-lg);
+  box-shadow: none;
+  transform: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cm-on-accent);
+}
+.main-actionBar-ActionBarRow .main-playButton-PlayButton > button > span > span {
+  inline-size: 14px;
+  block-size: 14px;
+}
+.main-actionBar-ActionBarRow .main-playButton-PlayButton > button[aria-label$="재생하기"] > span::after {
+  content: "재생";
+}
+.main-actionBar-ActionBarRow .main-playButton-PlayButton > button[aria-label$="일시 정지하기"] > span::after {
+  content: "일시 정지";
+}
+.main-actionBar-ActionBarRow .main-playButton-PlayButton > button[aria-label^="Play"] > span::after {
+  content: "Play";
+}
+.main-actionBar-ActionBarRow .main-playButton-PlayButton > button[aria-label^="Pause"] > span::after {
+  content: "Pause";
+}
+
+/* 셔플: 버튼 색(currentColor)으로 면을 만든다. 켜지면 Spotify 가 주는 포인트색이 그대로 면과 글자에 쓰인다
+   (꺼진 상태의 색은 21번) */
+.main-actionBar-ActionBarRow > :is(.main-actionBar-shuffleButton, button[aria-label*="셔플"], button[aria-label*="huffle"]) {
+  --encore-graphic-size-decorative-larger: 16px;
+  order: -1;
+  inline-size: auto;
+  min-inline-size: 132px;
+  block-size: 36px;
+  margin: 0 var(--cm-space-5) 0 0;
+  padding-inline: var(--cm-space-4);
+  gap: 7px;
+  justify-content: center;
+  border-radius: var(--cm-radius-lg);
+  background-color: color-mix(in srgb, currentColor 13%, transparent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transform: none;
+  transition: background-color var(--cm-dur-fast) var(--cm-ease);
+}
+.main-actionBar-ActionBarRow > :is(.main-actionBar-shuffleButton, button[aria-label*="셔플"], button[aria-label*="huffle"]):hover {
+  background-color: color-mix(in srgb, currentColor 19%, transparent);
+  transform: none;
+}
+.main-actionBar-ActionBarRow > :is(.main-actionBar-shuffleButton, button[aria-label*="셔플"], button[aria-label*="huffle"])::before {
+  order: 2; /* 아이콘 뒤 */
+}
+.main-actionBar-ActionBarRow > button[aria-label*="셔플"]::before {
+  content: "셔플";
+}
+.main-actionBar-ActionBarRow > button[aria-label*="huffle"]::before {
+  content: "Shuffle";
+}
+.main-actionBar-ActionBarRow > :is(.main-actionBar-shuffleButton, button[aria-label*="셔플"], button[aria-label*="huffle"])::after {
+  display: none; /* 켜짐 표시 점: 버튼 색이 대신 알려 준다 */
+}
+.main-actionBar-ActionBarRow > :is(.main-actionBar-shuffleButton, button[aria-label*="셔플"], button[aria-label*="huffle"]) > span {
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+/* 팔로우 같은 글자 버튼: 테두리 대신 같은 높이의 옅은 면 */
+.main-actionBar-ActionBarRow > button[data-encore-id="buttonSecondary"] {
+  block-size: 36px;
+  padding-inline: var(--cm-space-4);
+  border: 0;
+  border-radius: var(--cm-radius-lg);
+  background-color: var(--cm-fill-field);
+  transform: none;
+  transition: background-color var(--cm-dur-fast) var(--cm-ease);
+}
+.main-actionBar-ActionBarRow > button[data-encore-id="buttonSecondary"]:hover {
+  background-color: rgba(var(--spice-rgb-ink), 0.1);
+  transform: none;
+}
+
+/* ==========================================================================
+   10 곡 목록
+   행 높이(--row-height)와 DOM 은 바꾸지 않는다: 가상 스크롤·다중 선택·드래그가 여기에 의존한다.
+   ========================================================================== */
+.main-trackList-trackListHeader {
+  border-bottom: 1px solid var(--cm-hairline);
+}
+.main-trackList-trackListHeaderRow {
+  font-size: 0.75rem;
+  color: var(--spice-subtext);
+}
+
+.main-trackList-trackListRow {
+  border-radius: var(--cm-radius-sm);
+}
+/* 한 줄 걸러 옅은 띠. 가상 스크롤이라 nth-child 는 스크롤 중에 짝·홀이 뒤바뀐다 →
+   행 번호(aria-rowindex)의 끝자리로 고른다. :where 로 우선순위를 낮춰 hover·선택 색이 이긴다. */
+.main-trackList-trackList
+  :where([role="row"]:is([aria-rowindex$="1"], [aria-rowindex$="3"], [aria-rowindex$="5"], [aria-rowindex$="7"], [aria-rowindex$="9"]))
+  > .main-trackList-trackListRow {
+  background-color: var(--cm-fill-subtle);
+}
+.main-trackList-trackListRow:hover,
+.main-trackList-trackListRow:focus-within {
+  background-color: var(--cm-fill-hover);
+}
+/* 선택된 행 (aria-selected 는 행 바로 위 래퍼에 붙는다) */
+[role="row"][aria-selected="true"] > .main-trackList-trackListRow,
+[role="row"][aria-selected="true"] > .main-trackList-trackListRow:hover {
+  background-color: var(--cm-fill-selected);
+}
+/* 키보드 포커스 테두리는 유지하되 포인트색으로 */
+html:not(.no-focus-outline) .main-trackList-trackListRow:focus-within {
+  border-color: var(--spice-button);
+}
+
+.main-trackList-rowImage {
+  border-radius: var(--cm-radius-xs);
+  box-shadow: var(--cm-ring-cover);
+}
+.main-trackList-rowMainContentTitle {
+  font-size: 0.875rem; /* 곡 제목 14px, 아티스트·앨범 등 보조 정보는 13px */
+  font-weight: 500;
+}
+.main-trackList-rowMainContentSubTitle,
+.main-trackList-rowSectionVariable {
+  font-size: 0.8125rem;
+}
+.main-trackList-number,
+.main-trackList-duration,
+.main-trackList-durationHeader {
+  font-variant-numeric: tabular-nums;
+}
+.main-trackList-number {
+  font-size: 0.8125rem;
+}
+
+/* ==========================================================================
+   11 하단 재생바
+   위치와 기능은 Spotify 그대로. 표면·간격·진행바만 정돈한다.
+   ========================================================================== */
+.main-nowPlayingBar-container {
+  background-color: transparent;
+  border-radius: 0;
+}
+.main-nowPlayingBar-nowPlayingBar {
+  padding-inline: var(--cm-space-4);
+}
+
+/* 커버 */
+.main-nowPlayingWidget-coverArt .cover-art,
+.main-nowPlayingWidget-coverArt .cover-art-image {
+  border-radius: var(--cm-radius-sm);
+}
+.main-nowPlayingWidget-coverArt .cover-art {
+  background-color: var(--cm-fill-subtle);
+  box-shadow: var(--cm-ring-cover), 0 2px 8px rgba(var(--spice-rgb-shadow), 0.1);
+}
+
+/* 곡 정보 */
+.main-nowPlayingWidget-trackInfo .main-trackInfo-name {
+  font-weight: 600;
+}
+
+/* 재생/일시정지: 흰 원 대신 아이콘만. 클릭 영역(32px)은 그대로 */
+.player-controls [data-testid="control-button-playpause"] > span {
+  --background-base: transparent;
+  --background-highlight: var(--cm-fill-hover);
+  --background-press: var(--cm-fill-press);
+  --text-base: var(--spice-text);
+  --essential-base: var(--spice-text);
+  box-shadow: none;
+  transition: background-color var(--cm-dur-fast) var(--cm-ease);
+}
+.player-controls [data-testid="control-button-playpause"] svg {
+  width: 20px;
+  height: 20px;
+}
+.player-controls [data-testid="control-button-playpause"]:hover > span {
+  transform: none;
+}
+
+/* 진행바 · 볼륨: Spotify 가 노출한 변수로만 조정 */
+.playback-progressbar .progress-bar {
+  --bg-color: rgba(var(--spice-rgb-ink), 0.14);
+  --mg-color: rgba(var(--spice-rgb-ink), 0.3);
+  --fg-color: rgba(var(--spice-rgb-ink), 0.5);
+  --is-active-fg-color: var(--spice-button);
+  --progress-bar-height: 4px;
+  --progress-bar-radius: 2px;
+}
+.Root__now-playing-bar .progress-bar__slider {
+  background-color: #fff;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+.playback-bar__progress-time-elapsed,
+.main-playbackBarRemainingTime-container {
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subdued);
+}
+
+/* ==========================================================================
+   12 오른쪽 패널 (지금 재생 중 · 대기열 · 기기)
+   ========================================================================== */
+.Root__right-sidebar .main-nowPlayingView-container,
+.Root__right-sidebar #Desktop_PanelContainer_Id {
+  background-color: var(--cm-surface-panel);
+  border-radius: 0;
+  transition: background-color var(--cm-dur-ambient) var(--cm-ease);
+}
+
+.main-nowPlayingView-coverArt,
+.main-nowPlayingView-coverArt .cover-art,
+.main-nowPlayingView-coverArt .cover-art-image {
+  border-radius: var(--cm-radius-lg);
+}
+.main-nowPlayingView-coverArt .cover-art {
+  box-shadow: var(--cm-shadow-cover);
+}
+
+/* 캔버스(움직이는 배경) 위 그라데이션: #121212 고정색을 배경색 기준으로 다시 그린다 */
+.main-nowPlayingView-canvasVisualEnhancement::before {
+  background: linear-gradient(
+    color-mix(in srgb, var(--cm-surface-panel) 88%, transparent) 0%,
+    color-mix(in srgb, var(--cm-surface-panel) 0%, transparent) 30% 80%,
+    color-mix(in srgb, var(--cm-surface-panel) 82%, transparent) 93.25%,
+    var(--cm-surface-panel) 100%
+  );
+}
+.main-nowPlayingView-canvasVisualEnhancement::after {
+  background: linear-gradient(
+    color-mix(in srgb, var(--cm-surface-panel) 62%, transparent) 0%,
+    color-mix(in srgb, var(--cm-surface-panel) 50%, transparent) 30% 70%,
+    var(--cm-surface-panel) 95%
+  );
+}
+.main-nowPlayingView-contextItemInfo::before {
+  background: linear-gradient(
+    color-mix(in srgb, var(--cm-surface-panel) 0%, transparent) 0%,
+    color-mix(in srgb, var(--cm-surface-panel) 50%, transparent) 18%,
+    var(--cm-surface-panel) 89% 96%
+  );
+}
+
+/* 아티스트 소개 카드의 머리글은 사진 위에 놓인다 */
+.main-nowPlayingView-aboutArtist .main-nowPlayingView-sectionHeader {
+  --text-base: #fff;
+  color: #fff;
+}
+
+/* 패널 안 정보 카드(아티스트 소개 · 크레딧 · 다음 곡) */
+.main-nowPlayingView-section {
+  background-color: var(--cm-fill-subtle);
+  border-radius: var(--cm-radius-xl);
+}
+.main-nowPlayingView-sectionHeaderText {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   13 검색
+   ========================================================================== */
+/* 둘러보기 타일: 색 배경 위 제목은 스킴과 무관하게 흰색 */
+.Root__main-view a > div[style*="background-color"] > :is([data-encore-id="text"], [data-encore-id="text"] span) {
+  color: #fff;
+}
+
+/* 칩 줄(검색 범주 · 홈 필터 · 라이브러리 필터)의 좌우 넘김 버튼 */
+.search-searchCategory-carouselButton {
+  background-color: var(--spice-main-elevated);
+  box-shadow: var(--cm-shadow-pop);
+  color: var(--spice-text);
+}
+
+/* ==========================================================================
+   14 가사 (Spotify 기본 가사 화면만 다듬는다)
+   ========================================================================== */
+.lyrics-lyrics-container {
+  border-radius: 0;
+}
+.lyrics-lyricsContent-lyric {
+  font-family: var(--cm-font);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  word-break: keep-all;
+}
+
+/* ==========================================================================
+   15 설정 화면
+   ========================================================================== */
+.x-settings-container .x-settings-section {
+  border-bottom: 1px solid var(--cm-hairline);
+}
+
+/* 토글: 켜짐 = 초록(의미 색). 포인트색(붉은색)과 구분한다 */
+.x-toggle-indicatorWrapper {
+  background-color: rgba(var(--spice-rgb-ink), 0.18);
+  transition: background-color var(--cm-dur-mid) var(--cm-ease);
+}
+.x-toggle-input:hover:not([disabled], :active) ~ .x-toggle-indicatorWrapper {
+  background-color: rgba(var(--spice-rgb-ink), 0.24);
+}
+.x-toggle-input:checked ~ .x-toggle-indicatorWrapper,
+.x-toggle-input:checked:hover:not([disabled], :active) ~ .x-toggle-indicatorWrapper {
+  background-color: var(--spice-toggle-on);
+}
+.x-toggle-indicatorWrapper .x-toggle-indicator {
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
+}
+
+/* 드롭다운(select) */
+.main-dropDown-dropDown {
+  background-color: var(--cm-fill-field);
+  border: 1px solid var(--cm-hairline);
+  border-radius: var(--cm-radius-md);
+  color: var(--spice-text);
+  font-size: 0.8125rem;
+}
+.main-dropDown-dropDown:hover {
+  border-color: var(--cm-hairline-strong);
+}
+.main-dropDown-dropDown option {
+  background-color: var(--spice-main-elevated);
+  color: var(--spice-text);
+}
+
+/* ==========================================================================
+   16 메뉴 · 툴팁 · 모달
+   ========================================================================== */
+.main-contextMenu-menu {
+  background-color: var(--spice-main-elevated);
+  border-radius: var(--cm-radius-lg);
+  box-shadow: var(--cm-shadow-pop);
+  padding: 5px;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .main-contextMenu-menu {
+    background-color: rgba(var(--spice-rgb-main-elevated), 0.86);
+    backdrop-filter: saturate(180%) blur(24px);
+  }
+}
+.main-contextMenu-menuItemButton {
+  border-radius: var(--cm-radius-sm);
+  min-height: 34px;
+  height: auto;
+  padding-block: 7px;
+  color: var(--spice-text);
+}
+.main-contextMenu-menuItemButton:not([disabled]):hover,
+.main-contextMenu-menuItemButton:not([disabled]):focus,
+.main-contextMenu-menuItemButton[aria-expanded="true"] {
+  background-color: var(--cm-fill-hover);
+}
+.main-contextMenu-menuItemButton[aria-checked="true"],
+.main-contextMenu-menuItemButton[aria-selected="true"] {
+  color: var(--cm-accent-text);
+}
+/* 비활성 항목 · 묶음 제목 · 구분선: 기본값이 흰색 고정이라 밝은 메뉴에서 사라진다 */
+.main-contextMenu-menu .main-contextMenu-menuItemButton:is([disabled], [aria-disabled="true"]),
+.main-contextMenu-menu .main-contextMenu-menuItemButton:is([disabled], [aria-disabled="true"]):is(:hover, :focus) {
+  color: var(--spice-button-disabled);
+  background-color: transparent;
+}
+.main-contextMenu-menu .main-contextMenu-menuItem > [data-encore-id="text"] {
+  color: var(--spice-subtext);
+}
+ul.main-contextMenu-menu[role="menu"] .main-contextMenu-dividerBefore,
+ul.main-contextMenu-menu[role="menu"] .main-contextMenu-dividerAfter,
+ul.main-contextMenu-menu[role="menu"] .main-contextMenu-menuItem + .main-contextMenu-dividerBefore {
+  background: var(--cm-hairline);
+}
+
+/* 툴팁: 메뉴와 같은 떠 있는 표면. 배경을 반전시키면 안에 들어오는 제목·부제(일반 글자색 클래스)가
+   배경과 같은 색이 되어 사라지므로, 표면색 + 일반 글자색 조합을 쓴다. */
+.main-contextMenu-tippy {
+  background-color: var(--spice-main-elevated);
+  color: var(--spice-text);
+  border-radius: var(--cm-radius-md);
+  box-shadow: var(--cm-shadow-pop);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 5px 9px;
+}
+
+/* 모달 */
+.GenericModal__overlay {
+  background-color: rgba(var(--spice-rgb-shadow), 0.36);
+}
+.GenericModal {
+  border-radius: var(--cm-radius-xl);
+  box-shadow: var(--cm-shadow-pop);
+  overflow: hidden;
+}
+.GenericModal .main-trackCreditsModal-container,
+.main-trackCreditsModalV2-container,
+.main-playlistEditDetailsModal-container {
+  background-color: var(--spice-main-elevated);
+  color: var(--spice-text);
+  border-radius: var(--cm-radius-xl);
+}
+.main-playlistEditDetailsModal-titleInput,
+.main-playlistEditDetailsModal-descriptionTextarea {
+  background-color: var(--cm-fill-field);
+  border: 1px solid transparent;
+  border-radius: var(--cm-radius-md);
+  color: var(--spice-text);
+}
+.main-playlistEditDetailsModal-titleInput:focus,
+.main-playlistEditDetailsModal-descriptionTextarea:focus {
+  background-color: var(--spice-main-elevated);
+  border-color: var(--cm-hairline-strong);
+  box-shadow: 0 0 0 3px rgba(var(--spice-rgb-button), 0.22);
+}
+
+/* ==========================================================================
+   17 버튼 · 칩 · 입력
+   ========================================================================== */
+/* 글자가 들어간 포인트색 버튼은 더 진한 붉은색 배경으로 (흰 글자 대비 4.8:1) */
+[data-encore-id="buttonPrimary"][class*="encore-text-"] > .encore-bright-accent-set {
+  --background-base: var(--spice-accent-solid);
+  --background-highlight: color-mix(in srgb, var(--spice-accent-solid), #000 8%);
+  --background-press: color-mix(in srgb, var(--spice-accent-solid), #000 16%);
+}
+
+/* 칩: 선택 = 아주 옅은 붉은 배경 + 붉은 글자 */
+[data-encore-id="chip"] > span {
+  --background-tinted-base: rgba(var(--spice-rgb-ink), 0.06);
+  --background-tinted-highlight: rgba(var(--spice-rgb-ink), 0.1);
+  --background-tinted-press: rgba(var(--spice-rgb-ink), 0.14);
+  transition: background-color var(--cm-dur-mid) var(--cm-ease), color var(--cm-dur-mid) var(--cm-ease);
+}
+[data-encore-id="chip"][aria-checked="true"] > span,
+[data-encore-id="chip"] > span.encore-inverted-light-set {
+  --background-base: var(--cm-fill-accent);
+  --background-highlight: rgba(var(--spice-rgb-button), 0.17);
+  --background-press: rgba(var(--spice-rgb-button), 0.22);
+  --text-base: var(--cm-accent-text);
+  --essential-base: var(--cm-accent-text);
+  font-weight: 600;
+}
+
+/* 페이지 안 검색/필터 입력: 기본값이 흰색 고정이라 다시 칠한다 */
+.x-filterBox-filterInput {
+  border-radius: var(--cm-radius-md);
+  background-color: var(--cm-fill-field);
+  color: var(--spice-text);
+}
+.x-filterBox-filterInput::placeholder,
+.x-filterBox-searchIconContainer,
+.x-filterBox-expandButton {
+  color: var(--spice-subtext);
+}
+.x-filterBox-expandButton:hover,
+.x-filterBox-expandButton:focus {
+  background-color: var(--cm-fill-hover);
+  color: var(--spice-text);
+}
+.x-sortBox-sortDropdown {
+  border-radius: var(--cm-radius-md);
+}
+
+/* 인증 배지: 기본값은 옅은 초록. 안내(파랑) 의미 색으로 통일하고 체크는 흰색 */
+html[class*="-theme"] [data-encore-id="verifiedBadge"] {
+  --encore-verified-badge-background: var(--spice-announcement);
+  --encore-verified-badge-foreground: #fff;
+}
+
+/* 재생 중 표시(이퀄라이저)는 초록색 이미지 파일이다. 같은 파일을 마스크로 써서 포인트색으로 칠한다.
+   (앱에 들어 있는 /images/ 자산만 사용, 외부 요청 없음) */
+img[src$="equaliser-animated-green.gif"],
+img[src$="equaliser-green.svg"] {
+  object-fit: none;
+  object-position: 200vw 200vh; /* 원본 비트맵은 상자 밖으로 */
+  background-color: var(--spice-button);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+img[src$="equaliser-animated-green.gif"] {
+  -webkit-mask-image: url("/images/equaliser-animated-green.gif");
+  mask-image: url("/images/equaliser-animated-green.gif");
+}
+img[src$="equaliser-green.svg"] {
+  -webkit-mask-image: url("/images/equaliser-green.svg");
+  mask-image: url("/images/equaliser-green.svg");
+}
+
+/* ==========================================================================
+   18 스크롤바
+   ========================================================================== */
+/* OverlayScrollbars 가 노출한 변수로만 조정: 얇고 둥근 손잡이 */
+.os-theme-spotify.os-scrollbar {
+  --os-size: 10px;
+  --os-padding-perpendicular: 2px;
+  --os-handle-border-radius: 999px;
+  --os-handle-bg: rgba(var(--spice-rgb-ink), 0.22);
+  --os-handle-bg-hover: rgba(var(--spice-rgb-ink), 0.38);
+  --os-handle-bg-active: rgba(var(--spice-rgb-ink), 0.5);
+}
+
+/* 브라우저 기본 스크롤바(일부 팝업·textarea)도 같은 톤으로 */
+html {
+  scrollbar-color: rgba(var(--spice-rgb-ink), 0.28) transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--spice-rgb-ink), 0.28);
+}
+
+/* ==========================================================================
+   19 포커스 · 모션
+   ========================================================================== */
+/* 키보드 포커스 표시: Spotify 기본 표시는 그대로 두고, 직접 손댄 요소에만 포인트색 링을 더한다 */
+.Root__globalNav .main-globalNav-navLink:focus-visible,
+.view-homeShortcutsGrid-shortcut a:focus-visible,
+.main-contextMenu-menuItemButton:focus-visible,
+.main-dropDown-dropDown:focus-visible {
+  outline: 2px solid var(--spice-button);
+  outline-offset: 2px;
+}
+
+/* 움직임 줄이기: 이 테마가 추가한 전환을 모두 끈다 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cm-dur-fast: 0ms;
+    --cm-dur-mid: 0ms;
+    --cm-dur-slow: 0ms;
+    --cm-dur-ambient: 0ms;
+  }
+  .main-card-PlayButtonContainer {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   20 사용자 스니펫 호환
+   Marketplace 스니펫 "New Hover Panel" 은 사이드바를 화면 왼쪽 밖에 숨겼다가 hover 때
+   꺼내며, 배경을 검정으로 고정한다. 스니펫 동작은 그대로 두고 표면색만 테마에 맞춘다.
+   스니펫을 지우면 이 블록은 아무 영향이 없다. 이 블록을 지워도 테마는 정상 동작한다.
+   ========================================================================== */
+#Desktop_LeftSidebar_Id.Root__nav-bar {
+  background-color: var(--cm-surface-sidebar);
+}
+#Desktop_LeftSidebar_Id.Root__nav-bar[style*="position"],
+#Desktop_LeftSidebar_Id.Root__nav-bar:hover {
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   21 변경에 취약한 선택자
+   Encore 클래스는 "e-<버전>-이름" 형태라 Spotify 업데이트 때 접두사가 바뀐다.
+   접두사를 피해 이름 뒷부분만 부분 일치로 잡는다. 업데이트 후 깨지면 이 섹션부터 확인한다.
+   (확인일 2026-10-04, 접두사 e-10451-)
+   ========================================================================== */
+/* 검색 필드의 앞/뒤 아이콘 영역을 36px 높이에 맞춘다 */
+.main-globalNav-searchInputContainer [class*="form-input-icon__icon"] {
+  height: 36px;
+  align-items: center;
+}
+
+/* 선반 제목 줄 오른쪽의 "모두 표시": 제목이 같은 곳으로 가는 링크일 때만 숨긴다(08번의 꺾쇠가 대신한다) */
+.main-shelf-titleWrapper:has(.main-shelf-title a[href]) [class*="list-row__slot"] > a[href] {
+  display: none;
+}
+
+/* 꺼진 셔플 버튼(09번): Spotify 는 흐린 회색 글자를 준다. 눌 수 없는 버튼처럼 보이지 않게 일반 글자색으로.
+   이 선택자가 안 맞게 되면 회색 글자로 돌아갈 뿐이다. */
+.main-actionBar-ActionBarRow > :is(.main-actionBar-shuffleButton, button[aria-label*="셔플"], button[aria-label*="huffle"]):where([class*="color-text-subdued"]) {
+  color: var(--spice-text);
+  background-color: var(--cm-fill-field);
+}
+.main-actionBar-ActionBarRow > :is(.main-actionBar-shuffleButton, button[aria-label*="셔플"], button[aria-label*="huffle"]):where([class*="color-text-subdued"]):hover {
+  background-color: rgba(var(--spice-rgb-ink), 0.1);
+}
+
+/* ==========================================================================
+   22 재생 중인 커버의 색조
+   theme.js 가 곡이 바뀔 때 html 에 cm-tinted 클래스와 --cm-tint(커버에서 뽑아 밝기·채도를
+   다듬은 색)를 넣는다. 여기서는 그 색을 큰 표면 세 곳에 옅게 섞기만 한다.
+   - 상단 바(05번)는 사이드바 표면을 그대로 쓰므로 사이드바와 같은 색으로 함께 바뀐다.
+   - 포인트색(붉은색)과 글자색은 그대로다.
+   - 섞는 비율이 낮아(9~16%) 글자 대비는 스킴 기본값과 거의 같다.
+   - theme.js 가 없거나 실패하면 이 블록은 적용되지 않고 기본 표면색이 쓰인다.
+   ========================================================================== */
+html.cm-tinted {
+  --cm-surface-sidebar: color-mix(in srgb, var(--cm-tint) 9%, var(--spice-sidebar));
+  --cm-surface-player: color-mix(in srgb, var(--cm-tint) 16%, var(--spice-player));
+  --cm-surface-panel: color-mix(in srgb, var(--cm-tint) 9%, var(--spice-main));
+}
+
+/* ==========================================================================
+   23 유리 재생바
+   재생바를 반투명 유리로 만들고, 본문(메인 뷰)이 그 아래까지 내려가 스크롤되는 내용이
+   흐리게 비치게 한다. 재생바의 위치·크기·기능은 그대로다.
+
+   - 본문을 재생바 아래로 넣는 것은 "일반 스크롤 페이지"에서만 한다(홈·검색·앨범·플레이리스트·
+     아티스트·설정 등, 아래 표식으로 판별). 가사 화면이나 사용자 앱(ivLyrics 등)처럼 화면 아래에
+     조작부를 고정해 두는 페이지는 건드리지 않아 버튼이 재생바에 가려지지 않는다.
+   - 스크롤 끝에는 --cm-playbar-space 만큼 여백을 두어 마지막 줄이 재생바 위로 올라온다.
+   - backdrop-filter 나 :has() 가 없으면 이 블록 전체가 빠지고 불투명 재생바가 그대로 쓰인다.
+   ========================================================================== */
+@supports (backdrop-filter: blur(1px)) and selector(:has(*)) {
+  /* 떠 있는 캡슐(2026-10-10): 재생바 줄 자체는 비우고 안쪽 컨테이너만 둥근 유리로 만든다.
+     줄의 빈 곳(캡슐 둘레)은 클릭이 아래 화면으로 통과한다. 재생바 안의 버튼·진행바는 그대로다. */
+  .Root__now-playing-bar {
+    padding: var(--cm-capsule-gap);
+    box-sizing: border-box;
+    background-color: transparent;
+    border-top: 0;
+    pointer-events: none;
+  }
+  .Root__now-playing-bar > * {
+    pointer-events: auto;
+  }
+  .Root__now-playing-bar > .main-nowPlayingBar-container {
+    border-radius: var(--cm-capsule-radius);
+    background-color: color-mix(in srgb, var(--cm-surface-player) 72%, transparent);
+    backdrop-filter: saturate(190%) blur(30px);
+    border: 1px solid rgba(var(--spice-rgb-ink), 0.13);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.46), 0 2px 8px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    transition: background-color var(--cm-dur-ambient) var(--cm-ease);
+    /* 밝은 커버가 아래로 지나갈 때도 보조 글자가 읽히도록 한 단계 진하게 */
+    --text-subdued: color-mix(in srgb, var(--spice-subtext), var(--spice-text) 28%);
+  }
+
+  /* 사이드바와 오른쪽 패널도 창 맨 아래까지 내려 캡슐이 그 위에 뜨게 한다. 스크롤 끝에는 캡슐만큼 여백을 둔다. */
+  .Root__nav-bar,
+  .Root__right-sidebar {
+    grid-row-end: now-playing-bar;
+  }
+  /* 스크롤 상자의 padding 은 스크롤바 라이브러리가 0 으로 되돌린다. 내용 끝에 빈 칸을 하나 둔다. */
+  :is(.Root__nav-bar, .Root__right-sidebar) [data-overlayscrollbars-viewport]::after {
+    content: "";
+    display: block;
+    height: var(--cm-playbar-space);
+    flex: none;
+  }
+  /* 지금 재생 중 패널은 내용이 고정 높이 상자 밖으로 넘치는 구조라 위의 빈 칸이 스크롤 길이에 안 잡힌다. 내용 쪽에 준다. */
+  .Root__right-sidebar .main-nowPlayingView-panel {
+    padding-bottom: var(--cm-playbar-space);
+  }
+  :is(.Root__nav-bar, .Root__right-sidebar) .os-scrollbar-vertical {
+    bottom: var(--cm-playbar-space);
+  }
+
+  /* 본문도 창 맨 아래까지 내린다(면이 캡슐 뒤로 이어진다).
+     일반 스크롤 페이지가 아니면(가사 화면·사용자 앱 등) 내용 상자만 재생바 줄 위에서 끝내
+     화면 아래에 고정된 조작부가 캡슐에 가려지지 않게 한다. */
+  .Root__main-view {
+    grid-row-end: now-playing-bar;
+  }
+  .Root__main-view:not(
+      :has(
+          .main-shelf-shelf,
+          .main-trackList-trackList,
+          .main-gridContainer-gridContainer,
+          .main-entityHeader-container,
+          .view-homeShortcutsGrid-shortcuts,
+          [data-testid="settings-page"]
+        )
+    ) {
+    padding-bottom: var(--cm-playbar-row);
+    box-sizing: border-box;
+  }
+  .Root__main-view > #cm-np {
+    bottom: var(--cm-playbar-row); /* 25번의 지금 재생 중 화면도 같은 높이에서 끝낸다(25번의 inset: 0 보다 우선) */
+  }
+  .Root__main-view:has(
+      .main-shelf-shelf,
+      .main-trackList-trackList,
+      .main-gridContainer-gridContainer,
+      .main-entityHeader-container,
+      .view-homeShortcutsGrid-shortcuts,
+      [data-testid="settings-page"]
+    )
+    .main-view-container__scroll-node-child
+    main
+    > :last-child {
+    /* 스크롤 높이는 main 안의 페이지 요소가 정한다(main 자체는 화면 높이로 고정). 여백은 그 요소에 준다. */
+    padding-bottom: var(--cm-playbar-space);
+  }
+  /* 스크롤바는 재생바 위에서 끝나게 */
+  .Root__main-view:has(
+      .main-shelf-shelf,
+      .main-trackList-trackList,
+      .main-gridContainer-gridContainer,
+      .main-entityHeader-container,
+      .view-homeShortcutsGrid-shortcuts,
+      [data-testid="settings-page"]
+    )
+    .main-view-container__scroll-node
+    > .os-scrollbar-vertical {
+    bottom: var(--cm-playbar-space);
+  }
+}
+
+/* ==========================================================================
+   24 앱 전체 커버 배경
+   theme.js 가 재생 중인 커버의 주소를 html.cm-cover + --cm-cover-url 로 넘긴다. 여기서는 그 커버를
+   앱 전체 뒤에 흐리게 깔고, 큰 표면들을 반투명으로 바꿔 비치게 한다.
+   - 커버가 밝을수록 theme.js 가 --cm-bd-dim 을 낮춰 더 어둡게 누른다(글자 대비 유지).
+   - 22번의 옅은 색조는 이 블록이 켜지면 같은 토큰을 덮어써 대신한다(색은 배경에서 올라온다).
+   - 메뉴·모달·툴팁은 불투명한 그대로다.
+   - theme.js 가 없거나 커버를 못 받으면 이 블록은 적용되지 않는다.
+   ========================================================================== */
+html.cm-cover .Root__top-container {
+  isolation: isolate;
+  overflow: clip; /* 아래 배경이 창보다 넓어 문서가 스크롤 가능해지는 것을 막는다 */
+  /* 색이 있는 배경 위에서는 보조 글자를 한 단계 밝힌다(실측: 밝은 커버에서 4.1:1 → 5:1 이상).
+     메뉴·모달은 이 컨테이너 밖이라 원래 색 그대로다. */
+  --spice-subtext: color-mix(in srgb, var(--cm-subtext-base), var(--spice-text) 24%);
+  --text-subdued: var(--spice-subtext);
+}
+html.cm-cover .Root__top-container::before {
+  content: "";
+  position: absolute;
+  inset: -110px; /* 흐림 반경보다 넓게 잡아 가장자리가 비지 않게 한다 */
+  z-index: -1;
+  pointer-events: none;
+  background: var(--cm-cover-url) center / cover no-repeat;
+  filter: blur(76px) saturate(1.45) brightness(var(--cm-bd-dim, 0.48));
+  transition: background-image var(--cm-dur-ambient) linear, filter var(--cm-dur-ambient) linear;
+}
+html.cm-cover {
+  --cm-surface-sidebar: rgba(var(--spice-rgb-main), 0.36);
+  --cm-surface-player: rgba(var(--spice-rgb-main), 0.5);
+  --cm-surface-panel: rgba(var(--spice-rgb-main), 0.34);
+}
+html.cm-cover .Root__main-view {
+  background-color: rgba(var(--spice-rgb-main), 0.54);
+}
+html.cm-cover .Root__right-sidebar-peek {
+  background-color: transparent;
+}
+/* 배경색으로 양끝을 덮던 페이드는 반투명 배경에서 띠로 보인다 */
+html.cm-cover .search-searchCategory-contentArea {
+  --carousel-start-chevron-gradient: transparent;
+  --carousel-end-chevron-gradient: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.cm-cover .Root__top-container::before {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   25 지금 재생 중 (ivLyrics 가사 화면)
+   theme.js 가 /ivLyrics 화면에서 html.cm-np 를 켜고 메인 뷰에 #cm-np(원형 커버·제목·둘레 스펙트럼)를
+   얹는다. 여기서는 그것을 왼쪽에 배치하고 ivLyrics 의 가사를 오른쪽으로 민다.
+   - 가사·배경·도구 모음은 ivLyrics 가 그대로 그린다. 얹은 요소는 클릭을 가로채지 않는다.
+   - 메인 뷰가 좁으면(880px 미만) theme.js 가 cm-np 를 켜지 않아 원래 가사 화면 그대로다.
+   - 흐린 커버 위라 글자는 스킴과 무관하게 흰색이다(ivLyrics 배경이 항상 어둡다).
+   ========================================================================== */
+#cm-np {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+html.cm-np #cm-np {
+  display: block;
+}
+html.cm-np .lyrics-lyricsContainer-LyricsContainer > :is(.lyrics-lyricsContainer-SyncedLyricsPage, .lyrics-lyricsContainer-UnsyncedLyricsPage, .lyrics-lyricsContainer-LyricsUnavailablePage) {
+  margin-inline-start: 43%;
+}
+/* 가사 칸이 좁아지므로 줄 크기를 한 단계 줄인다(ivLyrics 설정값 대신 이 화면에서만) */
+html.cm-np .lyrics-lyricsContainer-LyricsLine {
+  font-size: var(--cm-np-lyric-size, 30px);
+}
+html.cm-np .lyrics-credit-footer {
+  left: 71.5% !important; /* ivLyrics 가 가운데(50%)로 고정한다. 가사 칸의 가운데로 옮긴다 */
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+.cm-np__head {
+  position: absolute;
+  left: 40px;
+  top: var(--cm-space-5);
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  color: #fff;
+}
+.cm-np__panel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 43%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 48px;
+  box-sizing: border-box;
+}
+.cm-np__art {
+  position: relative;
+  width: min(250px, 52%);
+  aspect-ratio: 1;
+}
+.cm-np__cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  animation: cm-np-spin 40s linear infinite;
+  animation-play-state: paused;
+}
+.cm-np__cover:not([src]) {
+  visibility: hidden;
+}
+html.cm-np-playing .cm-np__cover {
+  animation-play-state: running;
+}
+/* 스펙트럼 캔버스: 커버의 1.64배 (theme.js 의 npDraw 가 이 비율로 막대 시작점을 잡는다) */
+.cm-np__ring {
+  position: absolute;
+  left: -32%;
+  top: -32%;
+  width: 164%;
+  height: 164%;
+}
+.cm-np__title {
+  margin-top: 64px;
+  max-width: 82%;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #fff;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.cm-np__artist,
+.cm-np__album {
+  max-width: 82%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cm-np__artist {
+  margin-top: 5px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.74);
+}
+.cm-np__album {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.cm-np__probe {
+  display: none;
+}
+@keyframes cm-np-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-np__cover {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   26 재생바의 커버 색
+   색조(22번의 --cm-tint)가 있을 때 재생 버튼과 진행바·볼륨바가 그 색을 따른다.
+   - --spice-ink(어두운 스킴 흰색, 밝은 스킴 검정) 쪽으로 섞어 스킴에 맞는 밝기로 만든다.
+   - 무채색 커버처럼 색조가 없으면 이 블록은 적용되지 않고 11번의 기본 모습(아이콘만, 회색 진행바)이다.
+   ========================================================================== */
+html.cm-tinted .Root__now-playing-bar {
+  --cm-play-color: color-mix(in srgb, var(--cm-tint) 62%, var(--spice-ink));
+}
+html.cm-tinted .Root__now-playing-bar :is(.playback-progressbar, .volume-bar) .progress-bar {
+  --fg-color: var(--cm-play-color);
+  --is-active-fg-color: var(--cm-play-color);
+}
+html.cm-tinted .player-controls [data-testid="control-button-playpause"] > span {
+  --background-base: var(--cm-play-color);
+  --background-highlight: color-mix(in srgb, var(--cm-play-color), var(--spice-ink) 18%);
+  --background-press: color-mix(in srgb, var(--cm-play-color), var(--spice-main) 14%);
+  --text-base: var(--spice-main);
+  --essential-base: var(--spice-main);
+  color: var(--spice-main);
+}
+html.cm-tinted .player-controls [data-testid="control-button-playpause"] svg {
+  width: 16px;
+  height: 16px;
+}
